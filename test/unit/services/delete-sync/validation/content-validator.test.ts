@@ -37,7 +37,7 @@ describe('content-validator', () => {
       const config: ValidationConfig = {
         deletionMode: 'watchlist',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         watchlistGuids: new Set(['tmdb://12345', 'tmdb://67890']),
       }
 
@@ -59,7 +59,7 @@ describe('content-validator', () => {
       const config: ValidationConfig = {
         deletionMode: 'watchlist',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         watchlistGuids: new Set(['tmdb://12345']),
       }
 
@@ -80,7 +80,7 @@ describe('content-validator', () => {
       const config: ValidationConfig = {
         deletionMode: 'watchlist',
         deleteSyncTrackedOnly: true,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         watchlistGuids: new Set(),
       }
 
@@ -104,7 +104,7 @@ describe('content-validator', () => {
       const config: ValidationConfig = {
         deletionMode: 'watchlist',
         deleteSyncTrackedOnly: true,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         watchlistGuids: new Set(),
       }
 
@@ -127,7 +127,7 @@ describe('content-validator', () => {
       const config: ValidationConfig = {
         deletionMode: 'watchlist',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: true,
+        enablePlexListProtection: true,
         watchlistGuids: new Set(),
       }
 
@@ -150,7 +150,7 @@ describe('content-validator', () => {
       const config: ValidationConfig = {
         deletionMode: 'watchlist',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         watchlistGuids: new Set(),
       }
 
@@ -171,7 +171,7 @@ describe('content-validator', () => {
       const config: ValidationConfig = {
         deletionMode: 'watchlist',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         watchlistGuids: new Set(['tmdb://12345']),
       }
 
@@ -193,7 +193,7 @@ describe('content-validator', () => {
       const config: ValidationConfig = {
         deletionMode: 'watchlist',
         deleteSyncTrackedOnly: true,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         watchlistGuids: new Set(),
       }
 
@@ -223,7 +223,7 @@ describe('content-validator', () => {
       const config: ValidationConfig = {
         deletionMode: 'watchlist',
         deleteSyncTrackedOnly: true,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         watchlistGuids: new Set(['tmdb://12345']),
       }
 
@@ -265,7 +265,7 @@ describe('content-validator', () => {
         deletionMode: 'tag-based',
         removedTagPrefix: 'removed',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
       }
 
       const result = await validateTagBasedDeletion(
@@ -296,7 +296,7 @@ describe('content-validator', () => {
         removedTagPrefix: 'removed',
         deleteSyncRequiredTagRegex: 'user-.*',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
       }
 
       const result = await validateTagBasedDeletion(
@@ -326,7 +326,7 @@ describe('content-validator', () => {
         deletionMode: 'tag-based',
         removedTagPrefix: 'removed',
         deleteSyncTrackedOnly: true,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
       }
 
       mockValidators.isAnyGuidTracked = vi.fn(() => false)
@@ -358,7 +358,7 @@ describe('content-validator', () => {
         deletionMode: 'tag-based',
         removedTagPrefix: 'removed',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: true,
+        enablePlexListProtection: true,
       }
 
       mockValidators.isAnyGuidProtected = vi.fn(() => true)
@@ -389,7 +389,7 @@ describe('content-validator', () => {
         deletionMode: 'tag-based',
         removedTagPrefix: 'removed',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
       }
 
       const result = await validateTagBasedDeletion(
@@ -417,7 +417,7 @@ describe('content-validator', () => {
         deletionMode: 'tag-based',
         removedTagPrefix: 'my-removed-tag',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
       }
 
       await validateTagBasedDeletion(
@@ -454,7 +454,7 @@ describe('content-validator', () => {
         removedTagPrefix: 'removed',
         deleteSyncRequiredTagRegex: 'user-[a-z]+',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
       }
 
       await validateTagBasedDeletion(
@@ -490,7 +490,7 @@ describe('content-validator', () => {
         deletionMode: 'tag-based',
         removedTagPrefix: 'removed',
         deleteSyncTrackedOnly: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         // No deleteSyncRequiredTagRegex
       }
 
@@ -521,7 +521,7 @@ describe('content-validator', () => {
         deletionMode: 'tag-based',
         removedTagPrefix: 'removed',
         deleteSyncTrackedOnly: true,
-        enablePlexPlaylistProtection: true,
+        enablePlexListProtection: true,
       }
 
       mockValidators.isAnyGuidTracked = vi.fn(() => false)

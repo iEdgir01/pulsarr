@@ -702,7 +702,7 @@ export default function DeleteSyncPage() {
 
                   <FormField
                     control={form.control}
-                    name="enablePlexPlaylistProtection"
+                    name="enablePlexListProtection"
                     render={({ field }) => (
                       <FormItem className="flex items-center space-x-2">
                         <FormControl>
@@ -713,7 +713,7 @@ export default function DeleteSyncPage() {
                         </FormControl>
                         <div className="flex items-center">
                           <FormLabel className="text-foreground m-0">
-                            Enable Plex Playlist Protection
+                            Enable Plex List Protection
                           </FormLabel>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -722,9 +722,8 @@ export default function DeleteSyncPage() {
                             <TooltipContent>
                               <p className="max-w-xs">
                                 Prevent deletion of any content found in a
-                                designated Plex playlist. When enabled, running
-                                a dry run will create these playlists for all
-                                Plex users in the server.
+                                designated Plex List. Each user creates their
+                                own list manually with the configured name.
                               </p>
                             </TooltipContent>
                           </Tooltip>
@@ -735,13 +734,13 @@ export default function DeleteSyncPage() {
 
                   <FormField
                     control={form.control}
-                    name="plexProtectionPlaylistName"
+                    name="plexProtectionListName"
                     render={({ field }) => (
                       <FormItem className="space-y-2">
                         <div className="flex flex-col space-y-2">
                           <div className="flex items-center">
                             <FormLabel className="text-foreground m-0">
-                              Protection Playlist Name
+                              Protection List Name
                             </FormLabel>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -749,7 +748,7 @@ export default function DeleteSyncPage() {
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p className="max-w-xs">
-                                  Name of the Plex playlist containing content
+                                  Name of the Plex List containing content
                                   that should never be deleted.
                                 </p>
                               </TooltipContent>
@@ -760,7 +759,7 @@ export default function DeleteSyncPage() {
                               {...field}
                               value={
                                 isSaving && submittedValues
-                                  ? submittedValues.plexProtectionPlaylistName ||
+                                  ? submittedValues.plexProtectionListName ||
                                     ''
                                   : field.value || ''
                               }
@@ -768,7 +767,7 @@ export default function DeleteSyncPage() {
                               placeholder="Do Not Delete"
                               disabled={
                                 isSaving ||
-                                !form.watch('enablePlexPlaylistProtection')
+                                !form.watch('enablePlexListProtection')
                               }
                             />
                           </FormControl>

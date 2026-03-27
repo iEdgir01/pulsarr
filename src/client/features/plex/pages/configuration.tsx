@@ -574,7 +574,7 @@ export default function PlexConfigurationPage() {
                                   <p>
                                     Specify which connection method to use for
                                     ALL Plex server communication including
-                                    session monitoring, label sync, playlist
+                                    session monitoring, label sync, list
                                     protection, and content existence checks.
                                   </p>
                                   <p>

@@ -23,12 +23,15 @@ Automatically removes content from Sonarr/Radarr instances when it's no longer o
 - Optional regex filter: require additional tag matching for deletion
 - Allows delayed deletion based on tag presence
 
-## Plex Playlist Protection
+## Plex List Protection
 
-Protect content from deletion by adding it to designated Plex playlists:
-- Automatic playlist creation for all users (default: "Do Not Delete")
-- Content in protection playlists is excluded from deletion
+Protect content from deletion by adding it to a designated Plex List:
+- Content in the protection list is excluded from deletion (default list name: "Do Not Delete")
 - Works with both deletion modes
+
+:::important Setup for friend accounts
+Each user whose content you want to protect must create a Plex List with a name that **exactly matches** (case-insensitive) the configured protection list name, and must set that list to **visible to friends**. Pulsarr reads the list via the admin token on behalf of each user — if the list is private or missing, protection for that user will not apply.
+:::
 
 ## Configuration
 
@@ -37,7 +40,7 @@ Protect content from deletion by adding it to designated Plex playlists:
 | **Mode** | Watchlist-based or tag-based deletion |
 | **Content Types** | Movies, ended shows, continuing shows |
 | **File Management** | Delete or retain media files from disk |
-| **Playlist Protection** | Configure protection playlist names |
+| **List Protection** | Configure protection list name |
 | **Safety Threshold** | Prevent mass deletion with configurable limits |
 | **Scheduling** | Set automatic cleanup timing |
 | **Notifications** | Discord, Apprise, or both (optional: notify only on deletion) |
@@ -55,8 +58,8 @@ Protect content from deletion by adding it to designated Plex playlists:
 - **Run Now**: Manual immediate execution  
 - **Dry Run**: Preview deletions without changes
 
-:::info Playlist Creation
-Dry runs will create protection playlists if they don't exist - this is safe and doesn't delete content.
+:::info Dry Run
+Dry runs preview which items would be deleted or protected without making any changes.
 :::
 
 <img src={useBaseUrl('/img/Delete-Sync-Dry.png')} alt="Delete Sync Dry Run Notification" />
@@ -98,14 +101,14 @@ Result: Delete content with removal tag UNLESS it has a "protected" tag
 | Problem | Solution |
 |---------|----------|
 | **Content not being deleted** | Check deletion mode settings; verify content is off all watchlists; run dry run to preview |
-| **Too much content flagged** | Adjust safety threshold; use playlist protection; enable "Tracked Content Only" |
+| **Too much content flagged** | Adjust safety threshold; use list protection; enable "Tracked Content Only" |
 | **Regex not matching** | Test pattern with simple examples; check for valid JavaScript regex syntax |
-| **Protected content deleted** | Verify playlist names match exactly; ensure playlists exist for all users |
+| **Protected content deleted** | Verify list name matches exactly (case-insensitive); ensure the list exists and is visible to friends |
 
 ## Best Practices
 
 - Start with dry runs to understand impact
-- Use playlist protection for favorites or seasonal content
+- Use list protection for favorites or seasonal content
 - Consider tag-based mode for complex deletion workflows
 - Test regex patterns with simple examples before applying broadly
 - Use the "Tracked Content Only" option to avoid deleting manually added content

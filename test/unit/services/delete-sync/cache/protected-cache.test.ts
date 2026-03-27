@@ -10,7 +10,6 @@ describe('protected-cache', () => {
   let mockFastify: Partial<FastifyInstance>
   let mockPlexServerService: {
     isInitialized: ReturnType<typeof vi.fn>
-    getOrCreateProtectionPlaylists: ReturnType<typeof vi.fn>
     getProtectedItems: ReturnType<typeof vi.fn>
   }
   let mockLogger: ReturnType<typeof createMockLogger>
@@ -19,7 +18,6 @@ describe('protected-cache', () => {
     mockLogger = createMockLogger()
     mockPlexServerService = {
       isInitialized: vi.fn(),
-      getOrCreateProtectionPlaylists: vi.fn(),
       getProtectedItems: vi.fn(),
     }
     mockFastify = {
@@ -74,16 +72,8 @@ describe('protected-cache', () => {
       expect(mockPlexServerService.isInitialized).toHaveBeenCalledOnce()
     })
 
-    it('should load protected GUIDs from Plex playlists', async () => {
+    it('should load protected GUIDs from Plex Lists', async () => {
       mockPlexServerService.isInitialized.mockReturnValue(true)
-
-      const playlistMap = new Map([
-        ['user1', 'playlist-key-1'],
-        ['user2', 'playlist-key-2'],
-      ])
-      mockPlexServerService.getOrCreateProtectionPlaylists.mockResolvedValue(
-        playlistMap,
-      )
 
       const protectedGuids = new Set([
         'tmdb://11111',
@@ -93,8 +83,8 @@ describe('protected-cache', () => {
       mockPlexServerService.getProtectedItems.mockResolvedValue(protectedGuids)
 
       const result = await ensureProtectionCache(
-        null, // no cache
-        true, // enabled
+        null,
+        true,
         mockFastify as FastifyInstance,
         'Protected',
         mockLogger,
@@ -102,19 +92,11 @@ describe('protected-cache', () => {
 
       expect(result).toEqual(protectedGuids)
       expect(mockPlexServerService.isInitialized).toHaveBeenCalledOnce()
-      expect(
-        mockPlexServerService.getOrCreateProtectionPlaylists,
-      ).toHaveBeenCalledWith(true)
       expect(mockPlexServerService.getProtectedItems).toHaveBeenCalledOnce()
     })
 
     it('should handle empty protected GUIDs set', async () => {
       mockPlexServerService.isInitialized.mockReturnValue(true)
-
-      const playlistMap = new Map([['user1', 'playlist-key-1']])
-      mockPlexServerService.getOrCreateProtectionPlaylists.mockResolvedValue(
-        playlistMap,
-      )
 
       const emptySet = new Set<string>()
       mockPlexServerService.getProtectedItems.mockResolvedValue(emptySet)
@@ -130,55 +112,11 @@ describe('protected-cache', () => {
       expect(result).toEqual(emptySet)
     })
 
-    it('should throw error when no playlists found', async () => {
-      mockPlexServerService.isInitialized.mockReturnValue(true)
-
-      const emptyPlaylistMap = new Map()
-      mockPlexServerService.getOrCreateProtectionPlaylists.mockResolvedValue(
-        emptyPlaylistMap,
-      )
-
-      await expect(
-        ensureProtectionCache(
-          null,
-          true,
-          mockFastify as FastifyInstance,
-          'My Protection Playlist',
-          mockLogger,
-        ),
-      ).rejects.toThrow(
-        'Could not find or create protection playlists "My Protection Playlist" for any users - Plex server may be unreachable',
-      )
-    })
-
-    it('should throw error when getProtectedItems returns null', async () => {
-      mockPlexServerService.isInitialized.mockReturnValue(true)
-
-      const playlistMap = new Map([['user1', 'playlist-key-1']])
-      mockPlexServerService.getOrCreateProtectionPlaylists.mockResolvedValue(
-        playlistMap,
-      )
-
-      mockPlexServerService.getProtectedItems.mockResolvedValue(null)
-
-      await expect(
-        ensureProtectionCache(
-          null,
-          true,
-          mockFastify as FastifyInstance,
-          'Protected',
-          mockLogger,
-        ),
-      ).rejects.toThrow('Failed to retrieve protected items from playlists')
-    })
-
-    it('should throw and log error on playlist loading failure', async () => {
+    it('should throw and log error when getProtectedItems fails', async () => {
       mockPlexServerService.isInitialized.mockReturnValue(true)
 
       const error = new Error('Plex server unreachable')
-      mockPlexServerService.getOrCreateProtectionPlaylists.mockRejectedValue(
-        error,
-      )
+      mockPlexServerService.getProtectedItems.mockRejectedValue(error)
 
       await expect(
         ensureProtectionCache(

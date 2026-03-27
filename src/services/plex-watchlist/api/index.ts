@@ -3,7 +3,7 @@
 // Client functions (ping)
 export { pingPlex } from './client.js'
 // GraphQL/REST API functions
-export { getWatchlist, getWatchlistForUser } from './graphql.js'
+export { getCustomListsForUser, getWatchlist, getWatchlistForUser } from './graphql.js'
 // Helper functions and types
 export {
   hasValidPlexTokens,

@@ -58,7 +58,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -107,7 +107,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -157,7 +157,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: true,
+        enablePlexListProtection: true,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -195,7 +195,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: '', // empty
       }
@@ -236,7 +236,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed', // No tags start with this
       }
@@ -271,7 +271,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -309,7 +309,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -334,7 +334,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -379,7 +379,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -430,7 +430,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
         deleteSyncRequiredTagRegex: 'user-.*', // Requires a tag matching this pattern
@@ -488,7 +488,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
         deleteSyncRequiredTagRegex: 'user-.*',
@@ -537,7 +537,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
         // No deleteSyncRequiredTagRegex - should count all with removal tag
@@ -589,7 +589,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: true,
         removedTagPrefix: 'removed',
       }
@@ -639,7 +639,7 @@ describe('tag-counter', () => {
         deleteMovie: true,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false, // Tracked-only disabled
         removedTagPrefix: 'removed',
       }
@@ -691,7 +691,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: false,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -739,7 +739,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: true,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -786,7 +786,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: false,
         deleteContinuingShow: true,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -833,7 +833,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: true,
         deleteContinuingShow: true,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -885,7 +885,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: true,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: true,
+        enablePlexListProtection: true,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -923,7 +923,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: true,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -948,7 +948,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: true,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
       }
@@ -999,7 +999,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: true,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
         deleteSyncRequiredTagRegex: 'user-.*', // Requires a tag matching this pattern
@@ -1060,7 +1060,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: true,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
         deleteSyncRequiredTagRegex: 'user-.*',
@@ -1111,7 +1111,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: true,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false,
         removedTagPrefix: 'removed',
         // No deleteSyncRequiredTagRegex - should count all with removal tag
@@ -1165,7 +1165,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: true,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: true,
         removedTagPrefix: 'removed',
       }
@@ -1217,7 +1217,7 @@ describe('tag-counter', () => {
         deleteMovie: false,
         deleteEndedShow: true,
         deleteContinuingShow: false,
-        enablePlexPlaylistProtection: false,
+        enablePlexListProtection: false,
         deleteSyncTrackedOnly: false, // Tracked-only disabled
         removedTagPrefix: 'removed',
       }

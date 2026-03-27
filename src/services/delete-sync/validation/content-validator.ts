@@ -32,7 +32,7 @@ export interface ValidationConfig {
   /** Only delete tracked content */
   deleteSyncTrackedOnly: boolean
   /** Enable Plex playlist protection */
-  enablePlexPlaylistProtection: boolean
+  enablePlexListProtection: boolean
   /** Set of GUIDs in watchlists (for watchlist mode) */
   watchlistGuids?: Set<string>
 }
@@ -130,7 +130,7 @@ export async function validateTagBasedDeletion(
   }
 
   // Check protection
-  if (config.enablePlexPlaylistProtection) {
+  if (config.enablePlexListProtection) {
     const isProtected = validators.isAnyGuidProtected(itemGuids, (guid) =>
       logger.debug(`"${itemTitle}" is protected by GUID "${guid}"`),
     )
@@ -188,7 +188,7 @@ export function validateWatchlistDeletion(
   }
 
   // Check protection
-  if (config.enablePlexPlaylistProtection) {
+  if (config.enablePlexListProtection) {
     const isProtected = validators.isAnyGuidProtected(itemGuids, (guid) =>
       logger.debug(`"${itemTitle}" is protected by GUID "${guid}"`),
     )

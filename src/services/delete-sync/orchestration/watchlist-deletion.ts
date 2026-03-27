@@ -22,7 +22,7 @@ export interface WatchlistDeletionDeps {
     deleteContinuingShow: boolean
     deleteFiles: boolean
     deleteSyncTrackedOnly: boolean
-    enablePlexPlaylistProtection: boolean
+    enablePlexListProtection: boolean
   }
   sonarrManager: SonarrManagerService
   radarrManager: RadarrManagerService
@@ -70,7 +70,7 @@ export async function executeWatchlistDeletion(
         deleteMovie: config.deleteMovie,
         deleteFiles: config.deleteFiles,
         deleteSyncTrackedOnly: config.deleteSyncTrackedOnly,
-        enablePlexPlaylistProtection: config.enablePlexPlaylistProtection,
+        enablePlexListProtection: config.enablePlexListProtection,
         watchlistGuids,
       },
       validators: {
@@ -85,7 +85,7 @@ export async function executeWatchlistDeletion(
           isAnyGuidProtected(
             guids,
             deps.protectedGuids,
-            config.enablePlexPlaylistProtection,
+            config.enablePlexListProtection,
             onHit,
           ),
       },
@@ -110,7 +110,7 @@ export async function executeWatchlistDeletion(
         deleteContinuingShow: config.deleteContinuingShow,
         deleteFiles: config.deleteFiles,
         deleteSyncTrackedOnly: config.deleteSyncTrackedOnly,
-        enablePlexPlaylistProtection: config.enablePlexPlaylistProtection,
+        enablePlexListProtection: config.enablePlexListProtection,
         watchlistGuids,
       },
       validators: {
@@ -125,7 +125,7 @@ export async function executeWatchlistDeletion(
           isAnyGuidProtected(
             guids,
             deps.protectedGuids,
-            config.enablePlexPlaylistProtection,
+            config.enablePlexListProtection,
             onHit,
           ),
       },
@@ -163,7 +163,7 @@ export async function executeWatchlistDeletion(
   }
 
   logger.info(
-    `Delete sync ${dryRun ? '(DRY RUN)' : 'operation'} complete: ${counters.totalDeleted} items identified for deletion, ${counters.totalSkipped} skipped${config.enablePlexPlaylistProtection ? `, ${counters.totalProtected} protected` : ''}, ${counters.totalProcessed} total processed`,
+    `Delete sync ${dryRun ? '(DRY RUN)' : 'operation'} complete: ${counters.totalDeleted} items identified for deletion, ${counters.totalSkipped} skipped${config.enablePlexListProtection ? `, ${counters.totalProtected} protected` : ''}, ${counters.totalProcessed} total processed`,
   )
 
   // Log detailed summary at debug level

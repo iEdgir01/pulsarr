@@ -61,9 +61,9 @@ RUN mkdir -p /app/data/db && \
 COPY --from=builder /app/dist ./dist
 COPY migrations ./migrations
 COPY docker-entrypoint.sh ./
-RUN chmod +x docker-entrypoint.sh
+RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh
 COPY docker-healthcheck.sh ./
-RUN chmod +x docker-healthcheck.sh
+RUN sed -i 's/\r$//' docker-healthcheck.sh && chmod +x docker-healthcheck.sh
 
 # Copy license and documentation files for compliance
 COPY LICENSE* ./

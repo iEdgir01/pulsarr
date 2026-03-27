@@ -28,8 +28,8 @@ import type { Knex } from 'knex'
  * - plexTokens: jsonb
  * - skipFriendSync: boolean
  * - plexServerUrl: string (default: 'http://localhost:32400')
- * - enablePlexPlaylistProtection: boolean (default: false)
- * - plexProtectionPlaylistName: string (default: 'Do Not Delete')
+ * - enablePlexListProtection: boolean (default: false)
+ * - plexProtectionListName: string (default: 'Do Not Delete')
  * - plexSessionMonitoring: jsonb
  * - deleteMovie: boolean
  * - deleteEndedShow: boolean
@@ -100,8 +100,8 @@ export const SEED_CONFIGS = [
     plexTokens: JSON.stringify(['test_plex_token_1234567890']),
     skipFriendSync: false,
     plexServerUrl: 'http://localhost:32400',
-    enablePlexPlaylistProtection: false,
-    plexProtectionPlaylistName: 'Do Not Delete',
+    enablePlexListProtection: false,
+    plexProtectionListName: 'Do Not Delete',
     plexSessionMonitoring: JSON.stringify({
       enabled: false,
       filterUsers: [],

@@ -195,8 +195,8 @@ export interface Config {
   deleteSyncTrackedOnly: boolean // Only delete content tracked in approval_requests
   deleteSyncCleanupApprovals: boolean // Clean up approval_requests for deleted content
   deleteSyncRequiredTagRegex?: string // Additional regex filter - content must have BOTH removal tag AND tag matching this regex to be deleted
-  enablePlexPlaylistProtection: boolean
-  plexProtectionPlaylistName: string
+  enablePlexListProtection: boolean
+  plexProtectionListName: string
   plexServerUrl?: string // Optional: Only set this if automatic discovery fails, URL is auto-detected in most cases
   skipIfExistsOnPlex?: boolean // Skip downloading if content exists on accessible Plex servers (primary token only, requires reconciliation)
   // Plex Label Sync Configuration - nested object following complex config pattern

@@ -168,9 +168,9 @@ export async function getConfig(
     watchlistCapNotify: config.watchlistCapNotify || 'none',
     watchlistCapNotifyUser: Boolean(config.watchlistCapNotifyUser ?? false),
     // Plex playlist protection
-    enablePlexPlaylistProtection: Boolean(config.enablePlexPlaylistProtection),
-    plexProtectionPlaylistName:
-      config.plexProtectionPlaylistName || 'Do Not Delete',
+    enablePlexListProtection: Boolean(config.enablePlexListProtection),
+    plexProtectionListName:
+      config.plexProtectionListName || 'Do Not Delete',
     plexServerUrl: config.plexServerUrl || undefined,
     skipIfExistsOnPlex: Boolean(config.skipIfExistsOnPlex ?? false),
     // Plex Label Sync configuration - nested object following complex config pattern
@@ -306,10 +306,10 @@ export async function createConfig(
       watchlistCapNotifyUser: config.watchlistCapNotifyUser ?? false,
       maxDeletionPrevention: config.maxDeletionPrevention ?? 10,
       // Plex playlist protection
-      enablePlexPlaylistProtection:
-        config.enablePlexPlaylistProtection || false,
-      plexProtectionPlaylistName:
-        config.plexProtectionPlaylistName || 'Do Not Delete',
+      enablePlexListProtection:
+        config.enablePlexListProtection || false,
+      plexProtectionListName:
+        config.plexProtectionListName || 'Do Not Delete',
       plexServerUrl: config.plexServerUrl,
       skipIfExistsOnPlex: config.skipIfExistsOnPlex ?? false,
       // RSS fields
@@ -507,8 +507,8 @@ const ALLOWED_COLUMNS = new Set([
   'watchlistCapNotify',
   'watchlistCapNotifyUser',
   'maxDeletionPrevention',
-  'enablePlexPlaylistProtection',
-  'plexProtectionPlaylistName',
+  'enablePlexListProtection',
+  'plexProtectionListName',
 
   // Tagging configuration
   'tagUsersInSonarr',

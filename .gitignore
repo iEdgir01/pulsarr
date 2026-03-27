@@ -35,9 +35,17 @@ config.json
 # vscode
 .vscode/
 
+# Claude Code agent context (local only)
+.claude/
+
 
 # fixes folder
 /fixes/
+
+# Agent context files (local only, not contributed upstream)
+/CLAUDE.md
+/AGENTS.md
+/ai-context/
 
 # temporary files
 tmp/

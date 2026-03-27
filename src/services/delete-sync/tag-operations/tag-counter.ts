@@ -14,7 +14,7 @@ export interface TagCountConfig {
   deleteEndedShow: boolean
   deleteContinuingShow: boolean
   deleteMovie: boolean
-  enablePlexPlaylistProtection: boolean
+  enablePlexListProtection: boolean
   deleteSyncTrackedOnly: boolean
   removedTagPrefix: string | undefined
   deleteSyncRequiredTagRegex?: string
@@ -130,7 +130,7 @@ export async function countTaggedSeries(
           if (!hasRequired) continue
         }
 
-        if (config.enablePlexPlaylistProtection && protectedGuids) {
+        if (config.enablePlexListProtection && protectedGuids) {
           const guids = parseGuids(show.guids)
           // Count only if NOT protected
           if (isAnyGuidProtected(guids)) continue
@@ -267,7 +267,7 @@ export async function countTaggedMovies(
           if (!hasRequired) continue
         }
 
-        if (config.enablePlexPlaylistProtection && protectedGuids) {
+        if (config.enablePlexListProtection && protectedGuids) {
           const guids = parseGuids(movie.guids)
           // Count only if NOT protected
           if (isAnyGuidProtected(guids)) continue

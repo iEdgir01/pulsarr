@@ -282,9 +282,16 @@ export async function processMovieDeletions(
         }
 
         if (validation.protected) {
-          logger.info(
-            `Skipping deletion of movie "${movie.title}" as it is protected in Plex playlist "${playlistName || 'Do Not Delete'}"`,
-          )
+          if (dryRun) {
+            logger.debug(
+              { title: movie.title, instanceId, guids: movieGuidList },
+              `[DRY RUN] Movie "${movie.title}" is protected by list "${playlistName || 'Do Not Delete'}" - would be skipped`,
+            )
+          } else {
+            logger.info(
+              `Skipping deletion of movie "${movie.title}" as it is protected in Plex list "${playlistName || 'Do Not Delete'}"`,
+            )
+          }
           counters.incrementMovieProtected()
           continue
         }
@@ -335,8 +342,8 @@ export async function processMovieDeletions(
   }
 
   // Summary logging
-  const protectionSuffix = config.enablePlexPlaylistProtection
-    ? `, ${counters.moviesProtected} protected by playlist "${playlistName || 'Do Not Delete'}"`
+  const protectionSuffix = config.enablePlexListProtection
+    ? `, ${counters.moviesProtected} protected by list "${playlistName || 'Do Not Delete'}"`
     : ''
 
   logger.info(
@@ -445,9 +452,21 @@ export async function processShowDeletions(
         }
 
         if (validation.protected) {
-          logger.info(
-            `Skipping deletion of ${isContinuing ? 'continuing' : 'ended'} show "${show.title}" as it is protected in Plex playlist "${playlistName || 'Do Not Delete'}"`,
-          )
+          if (dryRun) {
+            logger.debug(
+              {
+                title: show.title,
+                instanceId,
+                status: isContinuing ? 'continuing' : 'ended',
+                guids: showGuidList,
+              },
+              `[DRY RUN] ${isContinuing ? 'Continuing' : 'Ended'} show "${show.title}" is protected by list "${playlistName || 'Do Not Delete'}" - would be skipped`,
+            )
+          } else {
+            logger.info(
+              `Skipping deletion of ${isContinuing ? 'continuing' : 'ended'} show "${show.title}" as it is protected in Plex list "${playlistName || 'Do Not Delete'}"`,
+            )
+          }
           counters.incrementShowProtected()
           continue
         }
@@ -504,8 +523,8 @@ export async function processShowDeletions(
   }
 
   // Summary logging
-  const protectionSuffix = config.enablePlexPlaylistProtection
-    ? `, ${counters.showsProtected} protected by playlist "${playlistName || 'Do Not Delete'}"`
+  const protectionSuffix = config.enablePlexListProtection
+    ? `, ${counters.showsProtected} protected by list "${playlistName || 'Do Not Delete'}"`
     : ''
 
   logger.info(

@@ -8,10 +8,8 @@
 import type { Item } from '@root/types/plex.types.js'
 import type {
   PlexMetadata,
-  PlexPlaylistItem,
   PlexResource,
   PlexServerConnectionInfo,
-  PlexSharedServerInfo,
   PlexUser,
 } from '@root/types/plex-server.types.js'
 import type {
@@ -20,7 +18,10 @@ import type {
   PlexShowMetadata,
   PlexShowMetadataResponse,
 } from '@root/types/plex-session.types.js'
-import { toItemsSingle } from '@services/plex-watchlist/index.js'
+import {
+  getCustomListsForUser,
+  toItemsSingle,
+} from '@services/plex-watchlist/index.js'
 import { buildPlexGuid, parseGuids } from '@utils/guid-handler.js'
 import { createServiceLogger } from '@utils/logger.js'
 import { isSameServerEndpoint } from '@utils/url.js'
@@ -48,11 +49,6 @@ import {
   getShowMetadata,
   searchByGuid,
 } from './plex-server/metadata/index.js'
-import {
-  createUserPlaylist,
-  findUserPlaylistByTitle,
-  getUserPlaylistItems,
-} from './plex-server/playlists/index.js'
 import { getAllPlexResources } from './plex-server/resources/resource-operations.js'
 import { getActiveSessions } from './plex-server/sessions/session-operations.js'
 import {
@@ -95,17 +91,10 @@ export class PlexServerService {
   // User-related cache
   private users: PlexUser[] | null = null
   private usersTimestamp = 0
-  private userTokens: Map<string, { token: string; timestamp: number }> =
-    new Map()
-  private sharedServerInfo: Map<string, PlexSharedServerInfo> | null = null
-  private sharedServerInfoTimestamp = 0
-
   // Server list cache - caches the raw Plex resources from plex.tv API
   private plexResourcesCache: PlexResource[] | null = null
 
-  // Playlist and protection workflow cache
-  // These are intended to be used within a single workflow execution
-  private protectedPlaylistsMap: Map<string, string> | null = null
+  // Protection workflow cache — workflow-scoped, cleared after each delete-sync run
   private protectedItemsCache: Set<string> | null = null
 
   // Connection selection cache - TTL-based (survives across reconciliations)
@@ -184,7 +173,7 @@ export class PlexServerService {
    * @returns The playlist name used for content protection
    */
   private getProtectionPlaylistName(): string {
-    return this.config.plexProtectionPlaylistName || 'Do Not Delete'
+    return this.config.plexProtectionListName || 'Do Not Delete'
   }
 
   // Track initialization state
@@ -226,16 +215,6 @@ export class PlexServerService {
       } else {
         this.log.debug(
           `Loaded ${users.length} Plex users during initialization`,
-        )
-      }
-
-      // Load shared server info to get user tokens
-      const serverInfo = await this.getSharedServerInfo()
-      if (serverInfo.size === 0) {
-        this.log.warn('No shared server info found during initialization')
-      } else {
-        this.log.debug(
-          `Loaded shared server info with ${serverInfo.size} user tokens`,
         )
       }
 
@@ -723,407 +702,12 @@ export class PlexServerService {
     }
   }
 
-  /**
-   * Retrieves shared server information including user access tokens
-   * Essential for multi-user authentication
-   *
-   * @returns Promise resolving to a map of username to shared server info
-   */
-  async getSharedServerInfo(): Promise<Map<string, PlexSharedServerInfo>> {
-    try {
-      // Use cached server info if valid (less than 6 hours old)
-      if (
-        this.sharedServerInfo &&
-        Date.now() - this.sharedServerInfoTimestamp < 6 * 60 * 60 * 1000
-      ) {
-        this.log.debug('Using cached shared server info')
-        return this.sharedServerInfo
-      }
+  // ── Playlist protection methods removed (CVE-2025-69417 migration) ──
+  // getSharedServerInfo, getUserToken, findUserPlaylistByTitle,
+  // createUserPlaylist, getOrCreateProtectionPlaylists, getUserPlaylistItems
+  // were deleted. Protection now uses Plex Lists via getCustomListsForUser
+  // with the admin token — no per-user tokens required.
 
-      const plexTvUrl = 'https://plex.tv'
-      const adminToken = this.config.plexTokens?.[0] || ''
-
-      if (!adminToken) {
-        this.log.warn(
-          'No Plex admin token available for shared server operations',
-        )
-        return new Map()
-      }
-
-      // Fetch server machine ID if not already cached
-      if (!this.serverMachineId) {
-        await this.getPlexServerConnectionInfo()
-        if (!this.serverMachineId) {
-          throw new Error('Could not determine server machine ID')
-        }
-      }
-
-      // Fetch shared server info which contains user access tokens
-      const sharedServersUrl = new URL(
-        `/api/servers/${this.serverMachineId}/shared_servers`,
-        plexTvUrl,
-      )
-
-      this.log.debug(
-        `Fetching shared server info from ${sharedServersUrl.toString()}`,
-      )
-
-      const response = await fetch(sharedServersUrl.toString(), {
-        headers: {
-          'X-Plex-Token': adminToken,
-          'X-Plex-Client-Identifier': PLEX_CLIENT_IDENTIFIER,
-          // This endpoint returns XML format
-        },
-        signal: AbortSignal.timeout(PLEX_API_TIMEOUT),
-      })
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch shared server info: ${response.status} ${response.statusText}`,
-        )
-      }
-
-      // Get response as text in XML format
-      const responseText = await response.text()
-
-      // Map to store username -> server info mapping
-      const serverInfoMap = new Map<string, PlexSharedServerInfo>()
-
-      // Use proper XML parser
-      const xmlParser = new XMLParser({
-        ignoreAttributes: false,
-        attributeNamePrefix: '',
-        isArray: (name) => name === 'SharedServer',
-      })
-
-      try {
-        // Parse XML
-        const parsed = xmlParser.parse(responseText)
-        const sharedServers = parsed.MediaContainer?.SharedServer || []
-
-        this.log.debug(
-          `Parsed ${sharedServers.length} shared servers from Plex API response`,
-        )
-
-        for (const server of sharedServers) {
-          if (server.username && server.accessToken) {
-            serverInfoMap.set(server.username, {
-              id: server.id || '',
-              username: server.username,
-              email: server.email || '',
-              userID: server.userID || '',
-              accessToken: server.accessToken,
-            })
-          }
-        }
-      } catch (xmlError) {
-        this.log.error({ error: xmlError }, 'Error parsing shared servers XML:')
-
-        // Fallback to regex as a last resort
-        this.log.warn('Falling back to regex parsing for shared servers')
-
-        // Parse XML response with regex as fallback
-        const sharedServerMatches =
-          responseText.match(/<SharedServer[^>]*>/g) || []
-        this.log.debug(
-          `Found ${sharedServerMatches.length} SharedServer entries in XML response`,
-        )
-
-        for (const serverMatch of sharedServerMatches) {
-          const id = serverMatch.match(/id="([^"]+)"/)?.[1] || ''
-          const username = serverMatch.match(/username="([^"]+)"/)?.[1] || ''
-          const email = serverMatch.match(/email="([^"]+)"/)?.[1] || ''
-          const userID = serverMatch.match(/userID="([^"]+)"/)?.[1] || ''
-          const accessToken =
-            serverMatch.match(/accessToken="([^"]+)"/)?.[1] || ''
-
-          if (username && accessToken) {
-            serverInfoMap.set(username, {
-              id,
-              username,
-              email,
-              userID,
-              accessToken,
-            })
-          }
-        }
-      }
-
-      // Add admin/owner information with appropriate access token
-      if (this.serverMachineId && adminToken) {
-        // Add the server owner with admin token permissions
-        const serverOwnerInfo = {
-          id: 'owner',
-          username: 'owner', // This can be updated with the actual owner username if needed
-          email: '',
-          userID: 'owner',
-          accessToken: adminToken,
-        }
-
-        // Add the server owner entry
-        serverInfoMap.set('owner', serverOwnerInfo)
-        this.log.debug(
-          'Added server owner to shared server info with admin token',
-        )
-      }
-
-      // Cache the result
-      this.sharedServerInfo = serverInfoMap
-      this.sharedServerInfoTimestamp = Date.now()
-
-      this.log.debug(`Found access tokens for ${serverInfoMap.size} users`)
-      return serverInfoMap
-    } catch (error) {
-      this.log.error({ error }, 'Error fetching shared server info:')
-      return new Map()
-    }
-  }
-
-  /**
-   * Retrieves a Plex authentication token for the specified user
-   * Uses cached data when available, otherwise fetches from shared server info
-   *
-   * @param username - The username to retrieve token for
-   * @returns Promise resolving to the auth token or null if unavailable
-   */
-  async getUserToken(username: string): Promise<string | null> {
-    try {
-      // Check cache first
-      const cachedInfo = this.userTokens.get(username.toLowerCase())
-      if (
-        cachedInfo &&
-        Date.now() - cachedInfo.timestamp < 6 * 60 * 60 * 1000
-      ) {
-        this.log.debug(`Using cached token for user "${username}"`)
-        return cachedInfo.token
-      }
-
-      // Get shared server info which contains user tokens
-      const serverInfoMap = await this.getSharedServerInfo()
-
-      // Try to find the user (case-insensitive search)
-      let userInfo: PlexSharedServerInfo | undefined
-
-      // First try exact match
-      userInfo = serverInfoMap.get(username)
-
-      // If not found, try case-insensitive match
-      if (!userInfo) {
-        for (const [key, info] of serverInfoMap.entries()) {
-          if (
-            key.toLowerCase() === username.toLowerCase() ||
-            info.email.toLowerCase() === username.toLowerCase()
-          ) {
-            userInfo = info
-            break
-          }
-        }
-      }
-
-      if (!userInfo) {
-        this.log.warn(`No access token found for user "${username}"`)
-        return null
-      }
-
-      // Cache the token
-      this.userTokens.set(username.toLowerCase(), {
-        token: userInfo.accessToken,
-        timestamp: Date.now(),
-      })
-
-      this.log.debug(`Found access token for user "${username}"`)
-      return userInfo.accessToken
-    } catch (error) {
-      this.log.error({ error }, `Error getting token for user "${username}":`)
-      return null
-    }
-  }
-
-  /**
-   * Locates a user's playlist by its title
-   *
-   * @param username - The Plex username
-   * @param title - The playlist title to search for
-   * @returns Promise resolving to playlist ID or null if not found
-   */
-  async findUserPlaylistByTitle(
-    username: string,
-    title: string,
-  ): Promise<string | null> {
-    const serverUrl = await this.getPlexServerUrl()
-    const token = await this.getUserToken(username)
-
-    if (!token) {
-      this.log.warn(`No token available for user "${username}"`)
-      return null
-    }
-
-    return findUserPlaylistByTitle(title, serverUrl, token, this.log)
-  }
-
-  /**
-   * Creates a new playlist for the specified user
-   *
-   * @param username - The Plex username
-   * @param options - Playlist configuration options
-   * @returns Promise resolving to the new playlist ID or null if creation failed
-   */
-  async createUserPlaylist(
-    username: string,
-    options: {
-      title: string
-      type: 'video' | 'audio' | 'photo' | 'mixed'
-      smart?: boolean
-    },
-  ): Promise<string | null> {
-    const serverUrl = await this.getPlexServerUrl()
-    const token = await this.getUserToken(username)
-
-    if (!token) {
-      this.log.warn(`No token available for user "${username}"`)
-      return null
-    }
-
-    this.log.debug(
-      `Creating playlist "${options.title}" for user "${username}"`,
-    )
-
-    return createUserPlaylist(options, serverUrl, token, this.log)
-  }
-
-  /**
-   * Ensures protection playlists exist for all users
-   * Maintains a map of username to playlist ID for tracking
-   *
-   * @param createIfMissing - Whether to create playlists that don't exist
-   * @returns Promise resolving to a map of username to playlist ID
-   */
-  async getOrCreateProtectionPlaylists(
-    createIfMissing = true,
-  ): Promise<Map<string, string>> {
-    // Use cached playlist map if available
-    if (this.protectedPlaylistsMap) {
-      return this.protectedPlaylistsMap
-    }
-
-    const playlistMap = new Map<string, string>()
-
-    try {
-      // Use the configured playlist name if available
-      const playlistName = this.getProtectionPlaylistName()
-
-      // Get all users (clone to avoid mutating cached array)
-      const users = [...(await this.getPlexUsers())]
-
-      // Ensure the admin/owner user is included
-      const adminToken = this.config.plexTokens?.[0]
-      if (adminToken) {
-        // Check if owner is already in the list
-        const hasOwner = users.some(
-          (user) =>
-            user.username.toLowerCase() === 'owner' ||
-            user.username.toLowerCase() === 'admin',
-        )
-
-        if (!hasOwner) {
-          // Add the owner user if not present
-          this.log.debug(
-            'Adding admin/owner user to the protection playlist creation list',
-          )
-          users.push({
-            id: 'owner',
-            username: 'owner',
-            title: 'Owner',
-            email: '',
-          })
-        }
-      }
-
-      this.log.info(`Checking protection playlists for ${users.length} users`)
-
-      // Process each user
-      for (const user of users) {
-        try {
-          // First try to find the existing playlist
-          const existingPlaylistId = await this.findUserPlaylistByTitle(
-            user.username,
-            playlistName,
-          )
-
-          if (existingPlaylistId) {
-            this.log.debug(
-              `Found existing "${playlistName}" playlist for user "${user.username}" with ID: ${existingPlaylistId}`,
-            )
-            playlistMap.set(user.username, existingPlaylistId)
-            continue
-          }
-
-          // Create the playlist if it doesn't exist and creation is enabled
-          if (createIfMissing) {
-            const newPlaylistId = await this.createUserPlaylist(user.username, {
-              title: playlistName,
-              type: 'mixed', // Allow both movies and shows
-              smart: false, // Regular playlist, not smart
-            })
-
-            if (newPlaylistId) {
-              this.log.info(
-                `Created "${playlistName}" playlist for user "${user.username}" with ID: ${newPlaylistId}`,
-              )
-              playlistMap.set(user.username, newPlaylistId)
-            } else {
-              this.log.warn(
-                `Failed to create "${playlistName}" playlist for user "${user.username}"`,
-              )
-            }
-          } else {
-            this.log.debug(
-              `No "${playlistName}" playlist found for user "${user.username}" and creation is disabled`,
-            )
-          }
-        } catch (error) {
-          this.log.error(
-            { error },
-            `Error processing protection playlist for user "${user.username}":`,
-          )
-        }
-      }
-
-      this.log.info(
-        `Successfully processed protection playlists for ${playlistMap.size} of ${users.length} users`,
-      )
-
-      // Cache the result
-      this.protectedPlaylistsMap = playlistMap
-
-      return playlistMap
-    } catch (error) {
-      this.log.error({ error }, 'Error in getOrCreateProtectionPlaylists:')
-      return playlistMap
-    }
-  }
-
-  /**
-   * Retrieves all items in a user's playlist with pagination support
-   *
-   * @param username - The Plex username
-   * @param playlistId - The playlist ID to retrieve items from
-   * @returns Promise resolving to a set of playlist items
-   */
-  async getUserPlaylistItems(
-    username: string,
-    playlistId: string,
-  ): Promise<Set<PlexPlaylistItem>> {
-    const serverUrl = await this.getPlexServerUrl()
-    const token = await this.getUserToken(username)
-
-    if (!token) {
-      this.log.warn(`No token available for user "${username}"`)
-      return new Set()
-    }
-
-    return getUserPlaylistItems(playlistId, serverUrl, token, this.log)
-  }
 
   /**
    * Retrieves all protected item GUIDs from all user protection playlists
@@ -1132,10 +716,6 @@ export class PlexServerService {
    * @returns Promise resolving to a set of protected GUIDs
    */
   async getProtectedItems(): Promise<Set<string>> {
-    // This method should be called at the start of a delete sync workflow
-    // The result is cached only for the duration of a single workflow execution
-
-    // Use cached results if available during the current workflow
     if (this.protectedItemsCache) {
       this.log.debug('Using cached protected items from current workflow')
       return this.protectedItemsCache
@@ -1143,124 +723,94 @@ export class PlexServerService {
 
     const protectedGuids = new Set<string>()
 
-    // Use the configured playlist name if available
-    const playlistName = this.getProtectionPlaylistName()
-
-    if (!this.config.enablePlexPlaylistProtection) {
-      this.log.debug('Plex playlist protection is disabled')
+    if (!this.config.enablePlexListProtection) {
+      this.log.debug('Plex list protection is disabled')
       return protectedGuids
     }
 
-    try {
-      // Get or create playlists for all users
-      const userPlaylists = await this.getOrCreateProtectionPlaylists(true)
+    const listName = this.getProtectionPlaylistName()
+    const adminToken = this.config.plexTokens?.[0] || ''
 
-      // Owner always succeeds (admin token). If shared users exist
-      // but none got through, Plex has revoked token access.
-      const sharedUserCount = (await this.getPlexUsers()).length
-      const nonOwnerPlaylists = [...userPlaylists.keys()].filter(
-        (u) => u !== 'owner',
-      )
-      if (sharedUserCount > 0 && nonOwnerPlaylists.length === 0) {
-        throw new Error(
-          'Plex has removed shared user access tokens - playlist protection cannot function. Delete sync aborted to prevent content loss. Disable playlist protection to resume delete sync.',
+    try {
+      const users = await this.fastify.db.getAllUsers()
+      const eligibleUsers = users.filter((u) => u.plex_uuid)
+
+      if (eligibleUsers.length === 0) {
+        this.log.warn(
+          `Plex list protection is enabled but no users have a plex_uuid — ` +
+            `protection list "${listName}" cannot be queried. ` +
+            `Ensure users have synced their Plex watchlist at least once.`,
         )
+        return protectedGuids
       }
 
-      // Process each user's playlist
-      for (const [username, playlistId] of userPlaylists.entries()) {
+      for (const user of eligibleUsers) {
+        const friend = {
+          watchlistId: user.plex_uuid as string,
+          username: user.name,
+          userId: user.id,
+        }
+
         try {
-          const playlistItems = await this.getUserPlaylistItems(
-            username,
-            playlistId,
+          const items = await getCustomListsForUser(
+            this.log,
+            adminToken,
+            friend,
+            listName,
           )
 
-          if (playlistItems.size === 0) {
+          if (items.length === 0) {
             this.log.debug(
-              `Protection playlist for user "${username}" is empty`,
+              `No protection list "${listName}" found for user "${user.name}"`,
             )
             continue
           }
 
           this.log.debug(
-            `Processing ${playlistItems.size} protected items from playlist "${playlistName}" for user "${username}"`,
+            `Processing ${items.length} protected items from list "${listName}" for user "${user.name}"`,
           )
 
-          // Process each item to fetch full metadata and extract standardized GUIDs
-          for (const item of playlistItems) {
-            try {
-              const itemMetadata = await this.getItemMetadata(
-                username,
-                item.guid,
-                item.grandparentGuid,
-                item.type,
-              )
+          for (const item of items) {
+            const itemMetadata = await this.getItemMetadata(
+              user.name,
+              item.id,
+              undefined,
+              item.type,
+            )
 
-              if (itemMetadata?.guids && itemMetadata.guids.length > 0) {
-                // Add each standardized GUID to the protected set
-                for (const guid of itemMetadata.guids) {
-                  protectedGuids.add(guid)
-                  this.log.debug(
-                    `Protected item GUID: "${guid}" (${item.title})`,
-                  )
-                }
-
-                this.log.debug(
-                  `Added protected item "${item.title}" with ${itemMetadata.guids.length} GUIDs from user "${username}"`,
-                )
-              } else {
-                this.log.warn(
-                  `Failed to retrieve standardized GUIDs for protected item "${item.title}" - item may not be properly protected`,
-                )
+            if (itemMetadata?.guids && itemMetadata.guids.length > 0) {
+              for (const guid of itemMetadata.guids) {
+                protectedGuids.add(guid)
               }
-            } catch (itemError) {
-              this.log.error(
-                { error: itemError },
-                `Error processing protected item "${item.title}":`,
+              this.log.debug(
+                `Added protected item "${item.title}" with ${itemMetadata.guids.length} GUIDs`,
+              )
+            } else {
+              this.log.warn(
+                `Failed to resolve GUIDs for protected item "${item.title}" - item may not be properly protected`,
               )
             }
           }
-
-          this.log.debug(
-            `Processed ${playlistItems.size} protected items from user "${username}"`,
-          )
-        } catch (error) {
+        } catch (userError) {
           this.log.error(
-            { error },
-            `Error processing protected items for user "${username}":`,
+            { error: userError },
+            `Error fetching protection list for user "${user.name}" - aborting to prevent unprotected deletion`,
           )
+          throw userError
         }
       }
 
       this.log.info(
-        `Found a total of ${protectedGuids.size} unique protected GUIDs across all users`,
+        `Found ${protectedGuids.size} unique protected GUIDs across all users`,
       )
 
-      // Log a sample of protected GUIDs at debug level only
-      if (
-        protectedGuids.size > 0 &&
-        (this.log.level === 'debug' || this.log.level === 'trace')
-      ) {
-        const sampleGuids = Array.from(protectedGuids).slice(0, 5)
-        this.log.debug('Sample protected GUIDs:')
-        for (const guid of sampleGuids) {
-          this.log.debug(`  Protected GUID: "${guid}"`)
-        }
-      }
-
-      // Store in cache for the duration of the current workflow
       this.protectedItemsCache = protectedGuids
-      this.log.debug(
-        `Cached ${protectedGuids.size} protected GUIDs for current workflow`,
-      )
-
       return protectedGuids
     } catch (error) {
       this.log.error(
         { error },
-        'Error getting protected items from user playlists:',
+        'Error getting protected items from Plex Lists:',
       )
-      // Rethrow so delete sync aborts rather than proceeding unprotected
       throw error
     }
   }
@@ -1373,7 +923,7 @@ export class PlexServerService {
     itemTitle?: string,
   ): Promise<boolean> {
     // Early return if protection is disabled
-    if (!this.config.enablePlexPlaylistProtection) {
+    if (!this.config.enablePlexListProtection) {
       this.log.debug(
         'Plex playlist protection is disabled - skipping protection check',
       )
@@ -1444,11 +994,7 @@ export class PlexServerService {
     this.selectedConnectionUrl = null
     this.users = null
     this.usersTimestamp = 0
-    this.userTokens = new Map()
-    this.protectedPlaylistsMap = null
     this.protectedItemsCache = null
-    this.sharedServerInfo = null
-    this.sharedServerInfoTimestamp = 0
     this.plexResourcesCache = null
 
     // Clear connection and content caches
@@ -1609,11 +1155,7 @@ export class PlexServerService {
    */
   clearWorkflowCaches(): void {
     this.log.debug('Clearing workflow-specific caches')
-    this.protectedPlaylistsMap = null
     this.protectedItemsCache = null
-
-    // Ensure we don't reset the initialized state, as that's managed separately
-    // through the initialize() method
   }
 
   /**

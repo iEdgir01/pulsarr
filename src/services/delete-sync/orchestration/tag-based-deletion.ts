@@ -29,7 +29,7 @@ export interface TagBasedDeletionDeps {
   config: {
     removedTagPrefix: string
     deleteSyncTrackedOnly: boolean
-    enablePlexPlaylistProtection: boolean
+    enablePlexListProtection: boolean
     deleteMovie: boolean
     deleteEndedShow: boolean
     deleteContinuingShow: boolean
@@ -71,7 +71,7 @@ async function performTagBasedDeletionSafetyCheck(
             deleteEndedShow: config.deleteEndedShow,
             deleteContinuingShow: config.deleteContinuingShow,
             deleteMovie: config.deleteMovie,
-            enablePlexPlaylistProtection: config.enablePlexPlaylistProtection,
+            enablePlexListProtection: config.enablePlexListProtection,
             deleteSyncTrackedOnly: config.deleteSyncTrackedOnly,
             removedTagPrefix: config.removedTagPrefix,
             deleteSyncRequiredTagRegex: config.deleteSyncRequiredTagRegex,
@@ -83,7 +83,7 @@ async function performTagBasedDeletionSafetyCheck(
             isAnyGuidProtected(
               guids,
               deps.protectedGuids,
-              config.enablePlexPlaylistProtection,
+              config.enablePlexListProtection,
             ),
           deps.trackedGuids,
           (guids) =>
@@ -100,7 +100,7 @@ async function performTagBasedDeletionSafetyCheck(
             deleteEndedShow: config.deleteEndedShow,
             deleteContinuingShow: config.deleteContinuingShow,
             deleteMovie: config.deleteMovie,
-            enablePlexPlaylistProtection: config.enablePlexPlaylistProtection,
+            enablePlexListProtection: config.enablePlexListProtection,
             deleteSyncTrackedOnly: config.deleteSyncTrackedOnly,
             removedTagPrefix: config.removedTagPrefix,
             deleteSyncRequiredTagRegex: config.deleteSyncRequiredTagRegex,
@@ -112,7 +112,7 @@ async function performTagBasedDeletionSafetyCheck(
             isAnyGuidProtected(
               guids,
               deps.protectedGuids,
-              config.enablePlexPlaylistProtection,
+              config.enablePlexListProtection,
             ),
           deps.trackedGuids,
           (guids) =>
@@ -210,7 +210,7 @@ export async function executeTagBasedDeletion(
     )
   }
 
-  if (config.enablePlexPlaylistProtection && !deps.protectedGuids) {
+  if (config.enablePlexListProtection && !deps.protectedGuids) {
     const errorMsg =
       'Plex playlist protection is enabled but protected GUIDs were not loaded'
     logger.error(errorMsg)
@@ -243,7 +243,7 @@ export async function executeTagBasedDeletion(
         deleteMovie: config.deleteMovie,
         deleteFiles: config.deleteFiles,
         deleteSyncTrackedOnly: config.deleteSyncTrackedOnly,
-        enablePlexPlaylistProtection: config.enablePlexPlaylistProtection,
+        enablePlexListProtection: config.enablePlexListProtection,
         deleteSyncRequiredTagRegex: config.deleteSyncRequiredTagRegex,
         removedTagPrefix: config.removedTagPrefix,
       },
@@ -259,7 +259,7 @@ export async function executeTagBasedDeletion(
           isAnyGuidProtected(
             guids,
             deps.protectedGuids,
-            config.enablePlexPlaylistProtection,
+            config.enablePlexListProtection,
             onHit,
           ),
       },
@@ -284,7 +284,7 @@ export async function executeTagBasedDeletion(
         deleteContinuingShow: config.deleteContinuingShow,
         deleteFiles: config.deleteFiles,
         deleteSyncTrackedOnly: config.deleteSyncTrackedOnly,
-        enablePlexPlaylistProtection: config.enablePlexPlaylistProtection,
+        enablePlexListProtection: config.enablePlexListProtection,
         deleteSyncRequiredTagRegex: config.deleteSyncRequiredTagRegex,
         removedTagPrefix: config.removedTagPrefix,
       },
@@ -300,7 +300,7 @@ export async function executeTagBasedDeletion(
           isAnyGuidProtected(
             guids,
             deps.protectedGuids,
-            config.enablePlexPlaylistProtection,
+            config.enablePlexListProtection,
             onHit,
           ),
       },

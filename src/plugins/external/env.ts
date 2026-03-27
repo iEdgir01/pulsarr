@@ -310,11 +310,11 @@ const schema = {
       type: 'boolean',
       default: false,
     },
-    enablePlexPlaylistProtection: {
+    enablePlexListProtection: {
       type: 'boolean',
       default: false,
     },
-    plexProtectionPlaylistName: {
+    plexProtectionListName: {
       type: 'string',
       default: 'Do Not Delete',
     },

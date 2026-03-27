@@ -474,3 +474,267 @@ export const getWatchlistForUser = async (
 
   return allItems
 }
+
+type CustomListItem = { id: string; title: string; type: string }
+
+type CustomListNamesResponse = {
+  data?: {
+    userV2?: {
+      customLists?: {
+        nodes: Array<{ id: string; name: string }>
+        pageInfo: { hasNextPage: boolean; endCursor: string | null }
+      }
+    }
+  }
+  errors?: Array<{ message: string }>
+}
+
+type CustomListItemsResponse = {
+  data?: {
+    userV2?: {
+      customLists?: {
+        nodes: Array<{
+          id: string
+          name: string
+          metadataItems: {
+            nodes: CustomListItem[]
+            pageInfo: { hasNextPage: boolean; endCursor: string | null }
+          }
+        }>
+      }
+    }
+  }
+  errors?: Array<{ message: string }>
+}
+
+const plexGraphQLPost = async (
+  log: FastifyBaseLogger,
+  token: string,
+  query: GraphQLQuery,
+): Promise<Response> => {
+  const rateLimiter = PlexRateLimiter.getInstance()
+  await rateLimiter.waitIfLimited(log)
+
+  const response = await fetch('https://community.plex.tv/api', {
+    method: 'POST',
+    headers: {
+      'User-Agent': USER_AGENT,
+      'Content-Type': 'application/json',
+      'X-Plex-Token': token,
+    },
+    body: JSON.stringify(query),
+    signal: AbortSignal.timeout(PLEX_API_TIMEOUT_MS),
+  })
+
+  if (!response.ok) {
+    if (response.status === 429) {
+      const retryAfterHeader = response.headers.get('Retry-After')
+      let retryAfterSec: number | undefined
+      if (retryAfterHeader) {
+        const asSeconds = Number.parseInt(retryAfterHeader, 10)
+        if (!Number.isNaN(asSeconds)) retryAfterSec = asSeconds
+      }
+      rateLimiter.setRateLimited(retryAfterSec, log)
+      const err = new Error(
+        'Rate limited by Plex GraphQL (429) while fetching custom lists',
+      ) as RateLimitError
+      err.isRateLimitExhausted = true
+      throw err
+    }
+    throw new Error(
+      `Plex API error: HTTP ${response.status} - ${response.statusText}`,
+    )
+  }
+
+  return response
+}
+
+/**
+ * Phase 1: Walk custom lists in small batches (names only, no items) to find
+ * the list whose name matches listName. Returns the cursor that was passed as
+ * `after` in the request that found it — this same cursor is used in Phase 2
+ * to address the same batch position.
+ *
+ * Plex requires first ≥ 2 for customLists. Using first:2 keeps the node count
+ * at 2 per request, well within the Plex GraphQL 500-node limit.
+ */
+const findCustomListPosition = async (
+  log: FastifyBaseLogger,
+  token: string,
+  user: Friend,
+  listName: string,
+  cursor: string | null = null,
+): Promise<{ found: false } | { found: true; cursorBefore: string | null }> => {
+  const query: GraphQLQuery = {
+    query: `query FindCustomList($user: UserInput!, $after: String) {
+      userV2(user: $user) {
+        ... on User {
+          customLists(first: 2, after: $after) {
+            nodes {
+              id
+              name
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      }
+    }`,
+    variables: { user: { id: user.watchlistId }, after: cursor },
+  }
+
+  const response = await plexGraphQLPost(log, token, query)
+  const json = (await response.json()) as CustomListNamesResponse
+
+  if (json.errors) {
+    throw new Error(`GraphQL errors: ${JSON.stringify(json.errors)}`)
+  }
+
+  const customLists = json.data?.userV2?.customLists
+  if (!customLists || customLists.nodes.length === 0) {
+    return { found: false }
+  }
+
+  for (const list of customLists.nodes) {
+    if (list.name.toLowerCase() === listName.toLowerCase()) {
+      return { found: true, cursorBefore: cursor }
+    }
+  }
+
+  if (customLists.pageInfo.hasNextPage && customLists.pageInfo.endCursor) {
+    return findCustomListPosition(
+      log,
+      token,
+      user,
+      listName,
+      customLists.pageInfo.endCursor,
+    )
+  }
+
+  return { found: false }
+}
+
+/**
+ * Phase 2: Fetch all metadata items from the target list at the given cursor
+ * position, paginating through items as needed.
+ *
+ * Uses first:2 for lists (minimum allowed by Plex) and first:200 for items.
+ * Node count per request: 2 × 200 = 400, safely within the 500-node limit.
+ * The list name is used to identify the correct node within the 2-item batch.
+ */
+const fetchCustomListItems = async (
+  log: FastifyBaseLogger,
+  token: string,
+  user: Friend,
+  listName: string,
+  cursorBefore: string | null,
+  itemCursor: string | null = null,
+): Promise<CustomListItem[]> => {
+  const query: GraphQLQuery = {
+    query: `query FetchCustomListItems($user: UserInput!, $after: String, $itemAfter: String) {
+      userV2(user: $user) {
+        ... on User {
+          customLists(first: 2, after: $after) {
+            nodes {
+              id
+              name
+              metadataItems(first: 100, after: $itemAfter) {
+                nodes {
+                  id
+                  title
+                  type
+                }
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+              }
+            }
+          }
+        }
+      }
+    }`,
+    variables: {
+      user: { id: user.watchlistId },
+      after: cursorBefore,
+      itemAfter: itemCursor,
+    },
+  }
+
+  const response = await plexGraphQLPost(log, token, query)
+  const json = (await response.json()) as CustomListItemsResponse
+
+  if (json.errors) {
+    throw new Error(`GraphQL errors: ${JSON.stringify(json.errors)}`)
+  }
+
+  const nodes = json.data?.userV2?.customLists?.nodes
+  if (!nodes || nodes.length === 0) {
+    return []
+  }
+
+  const list = nodes.find((n) => n.name.toLowerCase() === listName.toLowerCase())
+  if (!list) {
+    return []
+  }
+
+  const items = list.metadataItems.nodes
+  const { hasNextPage, endCursor } = list.metadataItems.pageInfo
+
+  if (hasNextPage && endCursor) {
+    const nextItems = await fetchCustomListItems(
+      log,
+      token,
+      user,
+      listName,
+      cursorBefore,
+      endCursor,
+    )
+    return [...items, ...nextItems]
+  }
+
+  return items
+}
+
+/**
+ * Fetches a user's custom lists from the Plex GraphQL API and returns
+ * metadata items from the first list whose name matches listName exactly.
+ *
+ * Uses a two-phase approach to stay within Plex's 500-node-per-request limit:
+ *   Phase 1 — walk lists by name (2 nodes/request) to find the target list
+ *   Phase 2 — fetch items from that list (≤400 nodes/request) with pagination
+ *
+ * Uses the admin token — no per-user token required. Plex enforces
+ * visibility server-side, returning only FRIENDS/ANYONE lists.
+ *
+ * Throws on any API error (rate limit, GraphQL error, network failure)
+ * so the caller can abort delete-sync rather than proceed unprotected.
+ */
+export const getCustomListsForUser = async (
+  log: FastifyBaseLogger,
+  token: string,
+  user: Friend,
+  listName: string,
+): Promise<CustomListItem[]> => {
+  if (!user?.watchlistId) {
+    const error = 'Invalid user object provided to getCustomListsForUser'
+    log.error(error)
+    throw new Error(error)
+  }
+
+  try {
+    const position = await findCustomListPosition(log, token, user, listName)
+    if (!position.found) {
+      return []
+    }
+    return fetchCustomListItems(log, token, user, listName, position.cursorBefore)
+  } catch (err) {
+    log.error(
+      { error: err },
+      `Error fetching custom lists for user "${user.username}"`,
+    )
+    throw err
+  }
+}

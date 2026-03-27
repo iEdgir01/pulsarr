@@ -188,8 +188,8 @@ export const ConfigFullSchema = z.object({
   deleteSyncTrackedOnly: z.boolean(),
   deleteSyncCleanupApprovals: z.boolean(),
   deleteSyncRequiredTagRegex: z.string(),
-  enablePlexPlaylistProtection: z.boolean(),
-  plexProtectionPlaylistName: z.string(),
+  enablePlexListProtection: z.boolean(),
+  plexProtectionListName: z.string(),
   // Plex Label Sync Configuration - getConfig() always returns this with defaults
   plexLabelSync: PlexLabelSyncConfigSchema,
   // RSS Config
@@ -356,8 +356,8 @@ export const ConfigUpdateSchema = z
     // Tag removal mode
     removedTagMode: z.enum(['remove', 'keep', 'special-tag']).optional(),
     // Plex Playlist Protection
-    enablePlexPlaylistProtection: z.boolean().optional(),
-    plexProtectionPlaylistName: z.string().optional(),
+    enablePlexListProtection: z.boolean().optional(),
+    plexProtectionListName: z.string().optional(),
     plexServerUrl: HttpUrlOptionalSchema,
     // Plex Existence Check - skip downloading if content exists on Plex servers
     // Primary token user: checks ALL accessible servers (owned + shared)

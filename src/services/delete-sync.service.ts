@@ -143,7 +143,7 @@ export class DeleteSyncService {
   private async ensureProtectionCache(): Promise<Set<string> | null> {
     this.protectedGuids = await ensureProtectionCache(
       this.protectedGuids,
-      this.config.enablePlexPlaylistProtection,
+      this.config.enablePlexListProtection,
       this.fastify,
       this.getProtectionPlaylistName(),
       this.log,
@@ -209,16 +209,16 @@ export class DeleteSyncService {
 
       // Make sure the Plex server is initialized if needed
       if (
-        this.config.enablePlexPlaylistProtection &&
+        this.config.enablePlexListProtection &&
         !this.fastify.plexServerService.isInitialized()
       ) {
         this.log.info(
-          'Plex playlist protection enabled but not initialized - initializing now',
+          'Plex list protection enabled but not initialized - initializing now',
         )
         const ok = await this.initialize()
         if (!ok) {
           return this.handleSafetyTriggered(
-            'Plex playlist protection is enabled but the Plex server failed to initialize',
+            'Plex list protection is enabled but the Plex server failed to initialize',
             dryRun,
           )
         }
@@ -475,8 +475,8 @@ export class DeleteSyncService {
         deleteFiles: this.config.deleteFiles,
         respectUserSyncSetting: this.config.respectUserSyncSetting,
         deleteSyncNotify: this.config.deleteSyncNotify,
-        enablePlexPlaylistProtection: this.config.enablePlexPlaylistProtection,
-        plexProtectionPlaylistName: this.config.plexProtectionPlaylistName,
+        enablePlexListProtection: this.config.enablePlexListProtection,
+        plexProtectionListName: this.config.plexProtectionListName,
         removedTagPrefix: this.config.removedTagPrefix ?? '<not-set>',
         dryRun: dryRun,
       },
@@ -622,7 +622,7 @@ export class DeleteSyncService {
     | { success: true; protectedGuids: Set<string> | null }
     | { success: false; protectedGuids: null; result: DeleteSyncResult }
   > {
-    if (!this.config.enablePlexPlaylistProtection) {
+    if (!this.config.enablePlexListProtection) {
       return { success: true, protectedGuids: null }
     }
 
@@ -631,7 +631,7 @@ export class DeleteSyncService {
         success: false,
         protectedGuids: null,
         result: this.handleSafetyTriggered(
-          'Plex playlist protection is enabled but Plex server is not properly initialized - cannot proceed with deletion to ensure content safety',
+          'Plex list protection is enabled but Plex server is not properly initialized - cannot proceed with deletion to ensure content safety',
           dryRun,
           seriesCount,
           moviesCount,
@@ -641,7 +641,7 @@ export class DeleteSyncService {
 
     try {
       this.log.info(
-        `Beginning deletion analysis; Plex playlist protection enabled with playlist "${this.getProtectionPlaylistName()}"`,
+        `Beginning deletion analysis; Plex list protection enabled with list "${this.getProtectionPlaylistName()}"`,
       )
 
       // Use cached protection loading to avoid redundant API calls
@@ -652,7 +652,7 @@ export class DeleteSyncService {
       }
 
       this.log.info(
-        `Protection playlists "${this.getProtectionPlaylistName()}" contain a total of ${protectedGuids.size} protected GUIDs`,
+        `Protection list "${this.getProtectionPlaylistName()}" contains a total of ${protectedGuids.size} protected GUIDs`,
       )
       this.log.info(
         'Protection uses standardized GUIDs for maximum compatibility across all systems',
@@ -660,7 +660,7 @@ export class DeleteSyncService {
 
       return { success: true, protectedGuids }
     } catch (protectedItemsError) {
-      const errorMsg = `Error retrieving protected items from playlists: ${protectedItemsError instanceof Error ? protectedItemsError.message : String(protectedItemsError)}`
+      const errorMsg = `Error retrieving protected items from lists: ${protectedItemsError instanceof Error ? protectedItemsError.message : String(protectedItemsError)}`
       this.log.error(
         {
           error:
@@ -804,8 +804,8 @@ export class DeleteSyncService {
         config: {
           removedTagPrefix: this.config.removedTagPrefix,
           deleteSyncTrackedOnly: this.config.deleteSyncTrackedOnly,
-          enablePlexPlaylistProtection:
-            this.config.enablePlexPlaylistProtection,
+          enablePlexListProtection:
+            this.config.enablePlexListProtection,
           deleteMovie: this.config.deleteMovie,
           deleteEndedShow: this.config.deleteEndedShow,
           deleteContinuingShow: this.config.deleteContinuingShow,
@@ -846,7 +846,7 @@ export class DeleteSyncService {
    * @returns The protection playlist name to use
    */
   private getProtectionPlaylistName(): string {
-    return this.config.plexProtectionPlaylistName || 'Do Not Delete'
+    return this.config.plexProtectionListName || 'Do Not Delete'
   }
 
   /**
@@ -901,8 +901,8 @@ export class DeleteSyncService {
           deleteContinuingShow: this.config.deleteContinuingShow,
           deleteFiles: this.config.deleteFiles,
           deleteSyncTrackedOnly: this.config.deleteSyncTrackedOnly,
-          enablePlexPlaylistProtection:
-            this.config.enablePlexPlaylistProtection,
+          enablePlexListProtection:
+            this.config.enablePlexListProtection,
         },
         sonarrManager: this.sonarrManager,
         radarrManager: this.radarrManager,

@@ -94,52 +94,84 @@ export const plexWatchlistHandler = http.post(
   },
 )
 
+const FRIENDS_RESPONSE = {
+  data: {
+    allFriendsV2: [
+      {
+        user: {
+          id: '1',
+          username: 'test-user-primary',
+          avatar: '',
+          displayName: 'Test User Primary',
+        },
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+      {
+        user: {
+          id: '2',
+          username: 'test-user-discord-apprise',
+          avatar: '',
+          displayName: 'Test User Discord',
+        },
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+      {
+        user: {
+          id: '3',
+          username: 'test-user-all-notifications',
+          avatar: '',
+          displayName: 'Test User Notifications',
+        },
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+      {
+        user: {
+          id: '4',
+          username: 'test-user-no-sync',
+          avatar: '',
+          displayName: 'Test User No Sync',
+        },
+        createdAt: '2024-01-01T00:00:00Z',
+      },
+    ],
+  },
+}
+
+// Phase 1 response: list names only, no items (used by FindCustomList query)
+const CUSTOM_LISTS_PHASE1_RESPONSE = {
+  data: {
+    userV2: {
+      customLists: {
+        nodes: [],
+        pageInfo: { hasNextPage: false, endCursor: null },
+      },
+    },
+  },
+}
+
+// Phase 2 response: empty items (used by FetchCustomListItems query)
+const CUSTOM_LISTS_PHASE2_RESPONSE = {
+  data: {
+    userV2: {
+      customLists: {
+        nodes: [],
+      },
+    },
+  },
+}
+
 export const plexCommunityHandler = http.post(
   'https://community.plex.tv/api',
-  () => {
-    // Return all seed users as friends to prevent them from being deleted
-    return HttpResponse.json({
-      data: {
-        allFriendsV2: [
-          {
-            user: {
-              id: '1',
-              username: 'test-user-primary',
-              avatar: '',
-              displayName: 'Test User Primary',
-            },
-            createdAt: '2024-01-01T00:00:00Z',
-          },
-          {
-            user: {
-              id: '2',
-              username: 'test-user-discord-apprise',
-              avatar: '',
-              displayName: 'Test User Discord',
-            },
-            createdAt: '2024-01-01T00:00:00Z',
-          },
-          {
-            user: {
-              id: '3',
-              username: 'test-user-all-notifications',
-              avatar: '',
-              displayName: 'Test User Notifications',
-            },
-            createdAt: '2024-01-01T00:00:00Z',
-          },
-          {
-            user: {
-              id: '4',
-              username: 'test-user-no-sync',
-              avatar: '',
-              displayName: 'Test User No Sync',
-            },
-            createdAt: '2024-01-01T00:00:00Z',
-          },
-        ],
-      },
-    })
+  async ({ request }) => {
+    const body = (await request.json()) as { query?: string }
+    if (body?.query?.includes('customLists')) {
+      if (body.query.includes('metadataItems')) {
+        return HttpResponse.json(CUSTOM_LISTS_PHASE2_RESPONSE)
+      }
+      return HttpResponse.json(CUSTOM_LISTS_PHASE1_RESPONSE)
+    }
+    // Default: return friends list (used by watchlist sync, etag poller, etc.)
+    return HttpResponse.json(FRIENDS_RESPONSE)
   },
 )
 

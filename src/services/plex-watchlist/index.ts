@@ -3,6 +3,7 @@
 
 // API layer
 export {
+  getCustomListsForUser,
   getWatchlist,
   getWatchlistForUser,
   hasValidPlexTokens,
