@@ -1,0 +1,136 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # Daily 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/jamcalli/pulsarr.git
+          git fetch upstream master
+
+      - name: Check how far behind upstream
+        id: diverge
+        run: |
+          BEHIND=$(git rev-list --count HEAD..upstream/master)
+          echo "behind=$BEHIND" >> "$GITHUB_OUTPUT"
+          if [ "$BEHIND" -eq "0" ]; then
+            echo "Already up to date with upstream."
+          else
+            echo "Fork is $BEHIND commit(s) behind upstream."
+          fi
+
+      - name: Attempt merge
+        if: steps.diverge.outputs.behind != '0'
+        id: merge
+        run: |
+          set +e
+          git merge --no-commit --no-ff upstream/master
+          MERGE_EXIT=$?
+          set -e
+
+          CONFLICTS=$(git diff --name-only --diff-filter=U 2>/dev/null || true)
+
+          if [ -n "$CONFLICTS" ]; then
+            echo "has_conflicts=true" >> "$GITHUB_OUTPUT"
+            {
+              echo 'conflict_files<<EOF'
+              echo "$CONFLICTS"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+            git merge --abort
+          elif [ "$MERGE_EXIT" -ne 0 ]; then
+            echo "Merge failed for unexpected reason (exit $MERGE_EXIT)."
+            git merge --abort || true
+            exit 1
+          else
+            echo "has_conflicts=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push merge to master
+        if: steps.diverge.outputs.behind != '0' && steps.merge.outputs.has_conflicts == 'false'
+        run: |
+          if git diff --cached --quiet; then
+            echo "Nothing staged — already up to date."
+          else
+            UPSTREAM_SHA=$(git rev-parse --short upstream/master)
+            git commit -m "chore: sync upstream jamcalli/pulsarr@${UPSTREAM_SHA}"
+            git push origin master
+            echo "Pushed sync commit."
+          fi
+
+      - name: Report conflict as GitHub issue
+        if: steps.diverge.outputs.behind != '0' && steps.merge.outputs.has_conflicts == 'true'
+        uses: actions/github-script@v7
+        env:
+          CONFLICT_FILES: ${{ steps.merge.outputs.conflict_files }}
+        with:
+          script: |
+            const conflictFiles = process.env.CONFLICT_FILES || '(unknown)';
+            const date = new Date().toISOString().split('T')[0];
+
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'upstream-conflict',
+              state: 'open',
+            });
+
+            const body = [
+              `## Upstream sync conflict (${date})`,
+              '',
+              'The daily upstream sync from `jamcalli/pulsarr` could not be applied automatically.',
+              'The following files have merge conflicts (likely overlap with list-protection changes):',
+              '',
+              '```',
+              conflictFiles,
+              '```',
+              '',
+              '### To resolve',
+              '```bash',
+              'git remote add upstream https://github.com/jamcalli/pulsarr.git',
+              'git fetch upstream master',
+              'git merge upstream/master',
+              '# resolve conflicts, then push',
+              '```',
+            ].join('\n');
+
+            if (open.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: open[0].number,
+                body,
+              });
+              console.log(`Updated conflict issue #${open[0].number}`);
+            } else {
+              const { data: issue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '⚠️ Upstream sync conflict — manual merge required',
+                labels: ['upstream-conflict'],
+                body,
+              });
+              console.log(`Created conflict issue #${issue.number}`);
+            }
