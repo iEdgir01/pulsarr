@@ -804,8 +804,7 @@ export class DeleteSyncService {
         config: {
           removedTagPrefix: this.config.removedTagPrefix,
           deleteSyncTrackedOnly: this.config.deleteSyncTrackedOnly,
-          enablePlexListProtection:
-            this.config.enablePlexListProtection,
+          enablePlexListProtection: this.config.enablePlexListProtection,
           deleteMovie: this.config.deleteMovie,
           deleteEndedShow: this.config.deleteEndedShow,
           deleteContinuingShow: this.config.deleteContinuingShow,
@@ -901,8 +900,7 @@ export class DeleteSyncService {
           deleteContinuingShow: this.config.deleteContinuingShow,
           deleteFiles: this.config.deleteFiles,
           deleteSyncTrackedOnly: this.config.deleteSyncTrackedOnly,
-          enablePlexListProtection:
-            this.config.enablePlexListProtection,
+          enablePlexListProtection: this.config.enablePlexListProtection,
         },
         sonarrManager: this.sonarrManager,
         radarrManager: this.radarrManager,

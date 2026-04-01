@@ -159,8 +159,7 @@ export function useDeleteSyncForm() {
           deleteContinuingShow: config.deleteContinuingShow || false,
           deleteFiles: config.deleteFiles || false,
           respectUserSyncSetting: config.respectUserSyncSetting ?? true,
-          enablePlexListProtection:
-            config.enablePlexListProtection || false,
+          enablePlexListProtection: config.enablePlexListProtection || false,
           plexProtectionListName:
             config.plexProtectionListName || 'Do Not Delete',
           deleteSyncNotify: notifyValue,
@@ -332,8 +331,7 @@ export function useDeleteSyncForm() {
         deleteContinuingShow: config.deleteContinuingShow || false,
         deleteFiles: config.deleteFiles || false,
         respectUserSyncSetting: config.respectUserSyncSetting ?? true,
-        enablePlexListProtection:
-          config.enablePlexListProtection || false,
+        enablePlexListProtection: config.enablePlexListProtection || false,
         plexProtectionListName:
           config.plexProtectionListName || 'Do Not Delete',
         deleteSyncNotify: config.deleteSyncNotify || 'none',

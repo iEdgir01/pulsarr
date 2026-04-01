@@ -169,8 +169,7 @@ export async function getConfig(
     watchlistCapNotifyUser: Boolean(config.watchlistCapNotifyUser ?? false),
     // Plex playlist protection
     enablePlexListProtection: Boolean(config.enablePlexListProtection),
-    plexProtectionListName:
-      config.plexProtectionListName || 'Do Not Delete',
+    plexProtectionListName: config.plexProtectionListName || 'Do Not Delete',
     plexServerUrl: config.plexServerUrl || undefined,
     skipIfExistsOnPlex: Boolean(config.skipIfExistsOnPlex ?? false),
     // Plex Label Sync configuration - nested object following complex config pattern
@@ -306,10 +305,8 @@ export async function createConfig(
       watchlistCapNotifyUser: config.watchlistCapNotifyUser ?? false,
       maxDeletionPrevention: config.maxDeletionPrevention ?? 10,
       // Plex playlist protection
-      enablePlexListProtection:
-        config.enablePlexListProtection || false,
-      plexProtectionListName:
-        config.plexProtectionListName || 'Do Not Delete',
+      enablePlexListProtection: config.enablePlexListProtection || false,
+      plexProtectionListName: config.plexProtectionListName || 'Do Not Delete',
       plexServerUrl: config.plexServerUrl,
       skipIfExistsOnPlex: config.skipIfExistsOnPlex ?? false,
       // RSS fields

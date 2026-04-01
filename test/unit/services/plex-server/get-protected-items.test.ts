@@ -61,6 +61,7 @@ describe('PlexServerService.getProtectedItems (Lists-based)', () => {
   let serviceLogger: ReturnType<typeof createMockLogger>
   let mockDb: { getAllUsers: ReturnType<typeof vi.fn> }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: test mock
   let mockFastify: any
   let service: PlexServerService
 

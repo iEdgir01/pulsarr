@@ -748,8 +748,8 @@ export default function DeleteSyncPage() {
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p className="max-w-xs">
-                                  Name of the Plex List containing content
-                                  that should never be deleted.
+                                  Name of the Plex List containing content that
+                                  should never be deleted.
                                 </p>
                               </TooltipContent>
                             </Tooltip>
@@ -759,8 +759,7 @@ export default function DeleteSyncPage() {
                               {...field}
                               value={
                                 isSaving && submittedValues
-                                  ? submittedValues.plexProtectionListName ||
-                                    ''
+                                  ? submittedValues.plexProtectionListName || ''
                                   : field.value || ''
                               }
                               className="w-full"

@@ -13,7 +13,10 @@ import type { Knex } from 'knex'
  */
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.alterTable('configs', (table) => {
-    table.renameColumn('enablePlexPlaylistProtection', 'enablePlexListProtection')
+    table.renameColumn(
+      'enablePlexPlaylistProtection',
+      'enablePlexListProtection',
+    )
   })
 
   await knex.schema.alterTable('configs', (table) => {
@@ -26,7 +29,10 @@ export async function up(knex: Knex): Promise<void> {
  */
 export async function down(knex: Knex): Promise<void> {
   await knex.schema.alterTable('configs', (table) => {
-    table.renameColumn('enablePlexListProtection', 'enablePlexPlaylistProtection')
+    table.renameColumn(
+      'enablePlexListProtection',
+      'enablePlexPlaylistProtection',
+    )
   })
 
   await knex.schema.alterTable('configs', (table) => {
