@@ -708,7 +708,6 @@ export class PlexServerService {
   // were deleted. Protection now uses Plex Lists via getCustomListsForUser
   // with the admin token — no per-user tokens required.
 
-
   /**
    * Retrieves all protected item GUIDs from all user protection playlists
    * Fetches complete metadata for each item and extracts standardized GUIDs

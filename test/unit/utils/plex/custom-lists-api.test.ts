@@ -170,7 +170,12 @@ describe('plex/custom-lists-api', () => {
       }),
     )
 
-    await getCustomListsForUser(mockLogger, 'admin-token', user, 'Do Not Delete')
+    await getCustomListsForUser(
+      mockLogger,
+      'admin-token',
+      user,
+      'Do Not Delete',
+    )
 
     expect(phase1Query).not.toBeNull()
     expect(phase1Query).toContain('customLists')
@@ -196,7 +201,12 @@ describe('plex/custom-lists-api', () => {
       }),
     )
 
-    await getCustomListsForUser(mockLogger, 'admin-token', user, 'Do Not Delete')
+    await getCustomListsForUser(
+      mockLogger,
+      'admin-token',
+      user,
+      'Do Not Delete',
+    )
 
     expect(capturedBody).toHaveProperty('variables')
     expect(
@@ -358,7 +368,13 @@ describe('plex/custom-lists-api', () => {
         if (body.query.includes('metadataItems')) {
           return HttpResponse.json(
             phase2Response(
-              [{ id: 'plex://movie/abc123', title: 'The Matrix', type: 'movie' }],
+              [
+                {
+                  id: 'plex://movie/abc123',
+                  title: 'The Matrix',
+                  type: 'movie',
+                },
+              ],
               false,
               null,
               'do not delete',
@@ -395,8 +411,9 @@ describe('plex/custom-lists-api', () => {
 
   it('throws on 429 to prevent proceeding with unprotected deletion', async () => {
     server.use(
-      http.post('https://community.plex.tv/api', () =>
-        new HttpResponse(null, { status: 429 }),
+      http.post(
+        'https://community.plex.tv/api',
+        () => new HttpResponse(null, { status: 429 }),
       ),
     )
 

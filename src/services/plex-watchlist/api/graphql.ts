@@ -675,7 +675,9 @@ const fetchCustomListItems = async (
     return []
   }
 
-  const list = nodes.find((n) => n.name.toLowerCase() === listName.toLowerCase())
+  const list = nodes.find(
+    (n) => n.name.toLowerCase() === listName.toLowerCase(),
+  )
   if (!list) {
     return []
   }
@@ -729,7 +731,13 @@ export const getCustomListsForUser = async (
     if (!position.found) {
       return []
     }
-    return fetchCustomListItems(log, token, user, listName, position.cursorBefore)
+    return fetchCustomListItems(
+      log,
+      token,
+      user,
+      listName,
+      position.cursorBefore,
+    )
   } catch (err) {
     log.error(
       { error: err },
